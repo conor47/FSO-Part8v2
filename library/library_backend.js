@@ -1,4 +1,5 @@
 const { ApolloServer, gql } = require("apollo-server");
+const { v1: uuid } = require("uuid");
 
 /*
  * Saattaisi olla järkevämpää assosioida kirja ja sen tekijä tallettamalla kirjan yhteyteen tekijän nimen sijaan tekijän id
@@ -109,8 +110,19 @@ const typeDefs = gql`
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks: [Book!]!
+    allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
+  }
+
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int
+      genres: [String!]!
+    ): Book
+
+    editAuthor(name: String!, born: Int!): Author
   }
 `;
 
@@ -118,8 +130,51 @@ const resolvers = {
   Query: {
     bookCount: () => books.length,
     authorCount: () => authors.length,
-    allBooks: () => books,
+    allBooks: (root, args) => {
+      if (args.genre && args.author) {
+        return books.filter(
+          (book) =>
+            book.author === args.author && book.genres.includes(args.genre)
+        );
+      } else if (args.author) {
+        return books.filter((book) => book.author === args.author);
+      } else if (args.genre) {
+        return books.filter((book) => book.genres.includes(args.genre));
+      }
+      return books;
+    },
     allAuthors: () => authors,
+  },
+  Mutation: {
+    addBook: (root, args) => {
+      const book = { ...args, id: uuid() };
+      books = books.concat(book);
+      if (authors.filter((author) => author.name === args.author).length >= 1) {
+        const author = authors.find((author) => author.name === args.author);
+        author.booksCount += 1;
+      } else {
+        const author = {
+          name: args.author,
+          id: uuid(),
+          booksCount: 1,
+        };
+        authors = authors.concat(author);
+      }
+      return book;
+    },
+
+    editAuthor: (root, args) => {
+      const author = authors.find((author) => author.name === args.name);
+      if (!author) {
+        return null;
+      }
+
+      const updatedAuthor = { ...author, born: args.born };
+      authors = authors.map((author) =>
+        author.name === args.name ? updatedAuthor : author
+      );
+      return updatedAuthor;
+    },
   },
 };
 
