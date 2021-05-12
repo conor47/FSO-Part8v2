@@ -94,7 +94,7 @@ let authors = [
 const typeDefs = gql`
   type Book {
     title: String!
-    published: Int
+    published: Int!
     author: String!
     id: ID!
     genres: [String!]
@@ -118,7 +118,7 @@ const typeDefs = gql`
     addBook(
       title: String!
       author: String!
-      published: Int
+      published: Int!
       genres: [String!]!
     ): Book
 
@@ -157,6 +157,7 @@ const resolvers = {
           name: args.author,
           id: uuid(),
           booksCount: 1,
+          published: args.published,
         };
         authors = authors.concat(author);
       }
