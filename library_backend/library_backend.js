@@ -94,7 +94,7 @@ let authors = [
 const typeDefs = gql`
   type Book {
     title: String!
-    published: Int!
+    published: Int
     author: String!
     id: ID!
     genres: [String!]
@@ -183,6 +183,6 @@ const server = new ApolloServer({
   resolvers,
 });
 
-server.listen(3000).then(({ url }) => {
+server.listen(4000).then(({ url }) => {
   console.log(`Server ready at ${url}`);
 });
